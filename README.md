@@ -13,3 +13,5 @@ This is an AI-based educational assistant that supports text, voice, and image i
 1. Clone this repo:
    ```bash
    git clone https://github.com/yourusername/yourrepo.git
+![chatbot_sticker](https://github.com/user-attachments/assets/82a4bcda-ea25-402c-ac0e-4b4780ccb49a)
+![chatbot_sticker](https://github.com/user-attachments/assets/9e99b7cb-ee97-4cd9-8f8b-1812b28d0d16)
