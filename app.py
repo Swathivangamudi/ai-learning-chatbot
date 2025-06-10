@@ -1,18 +1,17 @@
 import streamlit as st
 import speech_recognition as sr
 import google.generativeai as genai
-
-genai.configure(api_key="AIzaSyBFMeaRTndu-yzrUr53PiN30mHK2aVkXXo")
 import os
 from PIL import Image
 import pytesseract
-import fitz
+import fitz  # PyMuPDF
 import docx
 
 # === Setup ===
+genai.configure(api_key="AIzaSyBFMeaRTndu-yzrUr53PiN30mHK2aVkXXo")
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-
+# === Speech Recognition ===
 def recognize_speech():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
@@ -28,13 +27,19 @@ def recognize_speech():
         except Exception as e:
             return f"Error: {e}"
 
-
+# === Gemini Response ===
 def generate_explanation(query):
     model = genai.GenerativeModel("gemini-2.0-flash")
     response = model.generate_content(query)
     return response.text
 
+def generate_diagram_prompt(query):
+    prompt = f"Draw a simple labeled diagram or visual representation for this topic: {query}. Only return the image."
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    response = model.generate_content(prompt)
+    return response
 
+# === File Extraction ===
 def extract_text_from_pdf(uploaded_pdf):
     doc = fitz.open(stream=uploaded_pdf.read(), filetype="pdf")
     text = ""
@@ -42,56 +47,39 @@ def extract_text_from_pdf(uploaded_pdf):
         text += page.get_text()
     return text
 
-
 def extract_text_from_docx(uploaded_docx):
     doc = docx.Document(uploaded_docx)
     return "\n".join([para.text for para in doc.paragraphs])
 
-
-# === UI Configuration ===
+# === UI Setup ===
 st.set_page_config(page_title="AI-Powered Learning Companion", page_icon="🎓", layout="wide")
 
 st.markdown("""
     <style>
-
-    /* Existing styles... */
-
-    /* Change radio button label text color to black */
     div[data-testid="stRadio"] label {
         color: black !important;
         font-weight: bold !important;
     }
-
-    /* Make all radio button labels black and bold */
-    div[data-testid="stRadio"] label {
-        color: black !important;
-        font-weight: bold !important;
-    }
-
-    /* Optional: Make selected radio option dark blue (just the text) */
     div[data-testid="stRadio"] label[data-selected="true"] {
         color: #003366 !important;
     }
-
-
-
-
-        .stApp { background-color: #fee0f9 !important; }
-        section[data-testid="stSidebar"] { background-color: #FADADD !important; padding: 15px; border-radius: 10px; }
-        .stSidebar h2, .stSidebar h3, .stSidebar label, .stSidebar div { color: black !important; font-weight: bold; }
-        h1, h2 { color: black !important; }
-        .stTextInput>label { color: black !important; font-weight: bold !important; }
-        .stTextInput>div>div>input { background-color: #BEE1E6 !important; color: black !important; border-radius: 5px !important; padding: 10px; }
-        .stButton>button { color: white !important; background-color: #008585 !important; font-weight: bold; }
-        .ai-response { color: black !important;
-            font-weight: bold !important;
-            font-size: 16px !important;
-            padding: 15px;
-            background-color: #f0f0f0 !important;
-            border-radius: 10px;
-            width: 100% !important;
-            max-width: none !important;
-        }
+    .stApp { background-color: #fee0f9 !important; }
+    section[data-testid="stSidebar"] { background-color: #FADADD !important; padding: 15px; border-radius: 10px; }
+    .stSidebar h2, .stSidebar h3, .stSidebar label, .stSidebar div { color: black !important; font-weight: bold; }
+    h1, h2 { color: black !important; }
+    .stTextInput>label { color: black !important; font-weight: bold !important; }
+    .stTextInput>div>div>input { background-color: #BEE1E6 !important; color: black !important; border-radius: 5px !important; padding: 10px; }
+    .stButton>button { color: white !important; background-color: #008585 !important; font-weight: bold; }
+    .ai-response {
+        color: black !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+        padding: 15px;
+        background-color: #f0f0f0 !important;
+        border-radius: 10px;
+        width: 100% !important;
+        max-width: none !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -103,7 +91,6 @@ else:
 st.sidebar.subheader("🌍 Select Language")
 language = st.sidebar.radio("Choose:", ["English", "Telugu", "Hindi"], index=0)
 
-# === Unified Upload Section (Images + Files) in Sidebar ===
 st.sidebar.header("📂 Upload Image or File")
 uploaded = st.sidebar.file_uploader(
     "Upload image (JPG/PNG) or document (PDF, DOCX, TXT)",
@@ -115,7 +102,6 @@ if uploaded:
     if uploaded.type.startswith("image"):
         image = Image.open(uploaded)
         st.sidebar.image(image, caption="Uploaded Image", use_container_width=True)
-
         extracted_text = pytesseract.image_to_string(image)
         if extracted_text.strip():
             st.sidebar.subheader("📝 Extracted Text from Image")
@@ -137,7 +123,7 @@ if uploaded:
     else:
         st.sidebar.warning("Unsupported file type.")
 
-# === Main Page Content ===
+# === Main Page ===
 if language == "Telugu":
     st.markdown("<h1 style='color:black;'>🎓 AI ఆధారిత విద్యా సహాయకుడు</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='color:black;'>AI గురువును అడగండి</h2>", unsafe_allow_html=True)
@@ -148,14 +134,12 @@ else:
     st.markdown("<h1 style='color:black;'>🎓 AI-Powered Learning Companion</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='color:black;'>Ask the AI Tutor</h2>", unsafe_allow_html=True)
 
-# === Unified Input Mode Section ===
 input_mode = st.radio("Choose input type:", ["Text", "Voice"], horizontal=True)
 voice_query = None
 text_query = ""
 
 if input_mode == "Text":
     text_query = st.text_input("Enter your question")
-
 elif input_mode == "Voice":
     if st.button("🎤 Speak your question"):
         voice_result = recognize_speech()
@@ -165,7 +149,6 @@ elif input_mode == "Voice":
         else:
             st.error("Speech not recognized or error occurred.")
 
-# === Final Query Resolution ===
 final_query = ""
 if extracted_text.strip():
     final_query = extracted_text.strip()
@@ -174,19 +157,25 @@ elif voice_query:
 elif text_query.strip():
     final_query = text_query.strip()
 
-# === Get Answer Button ===
 if st.button("Get Answer"):
     if final_query:
         with st.spinner("Generating answer..."):
             try:
                 ai_response = generate_explanation(final_query)
                 st.markdown(f"<div class='ai-response'>{ai_response}</div>", unsafe_allow_html=True)
+                if any(word in final_query.lower() for word in ["diagram", "figure", "chart", "graph"]):
+                    diagram_response = generate_diagram_prompt(final_query)
+                    image_parts = [part for part in diagram_response.parts if part.mime_type.startswith("image/")]
+                    if image_parts:
+                        for image_part in image_parts:
+                            st.image(image_part.bytes_data, caption="AI-Generated Diagram", use_column_width=True)
+                    else:
+                        st.info("No diagram was generated for this topic.")
             except Exception as e:
                 st.error(f"Error generating response: {e}")
     else:
         st.warning("Please provide a question by typing, speaking, or uploading an image/file.")
 
-# === Sidebar AI Response for Upload ===
 if extracted_text.strip():
     try:
         ai_response_file = generate_explanation(extracted_text)
