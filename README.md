@@ -12,6 +12,6 @@ This is an AI-based educational assistant that supports text, voice, and image i
 ### Setup
 1. Clone this repo:
    ```bash
-   git clone https://github.com/yourusername/yourrepo.git
+   git clone https://github.com/Swathivangamudi/ai-learning-chatbot.git
 
 ![chatbot_sticker](https://github.com/user-attachments/assets/9e99b7cb-ee97-4cd9-8f8b-1812b28d0d16)
