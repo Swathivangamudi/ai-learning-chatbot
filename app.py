@@ -11,7 +11,10 @@ from groq import Groq
 
 # === Setup ===
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+import platform
+if platform.system() == "Windows":
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# On Linux (Streamlit Cloud), tesseract is on PATH by default via packages.txt
 
 # === Speech Recognition ===
 def recognize_speech():
